@@ -11,6 +11,7 @@
 		FC41A7101F446A3E00E7BE7F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC41A70F1F446A3E00E7BE7F /* ViewController.swift */; };
 		FC41A7121F446A3E00E7BE7F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC41A7111F446A3E00E7BE7F /* Assets.xcassets */; };
 		FC41A7151F446A3E00E7BE7F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FC41A7131F446A3E00E7BE7F /* Main.storyboard */; };
+		FC41A71D1F446AEC00E7BE7F /* Preview_Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC41A71C1F446AEC00E7BE7F /* Preview_Window.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +21,7 @@
 		FC41A7111F446A3E00E7BE7F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FC41A7141F446A3E00E7BE7F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		FC41A7161F446A3E00E7BE7F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FC41A71C1F446AEC00E7BE7F /* Preview_Window.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Preview_Window.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 				FC41A70F1F446A3E00E7BE7F /* ViewController.swift */,
 				FC41A7111F446A3E00E7BE7F /* Assets.xcassets */,
 				FC41A7131F446A3E00E7BE7F /* Main.storyboard */,
+				FC41A71C1F446AEC00E7BE7F /* Preview_Window.swift */,
 				FC41A7161F446A3E00E7BE7F /* Info.plist */,
 			);
 			path = Thumb_Preview;
@@ -133,6 +136,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FC41A71D1F446AEC00E7BE7F /* Preview_Window.swift in Sources */,
 				FC41A7101F446A3E00E7BE7F /* ViewController.swift in Sources */,
 				FC41A70E1F446A3E00E7BE7F /* AppDelegate.swift in Sources */,
 			);
@@ -296,3 +300,4 @@
 	};
 	rootObject = FC41A7021F446A3E00E7BE7F /* Project object */;
 }
+
