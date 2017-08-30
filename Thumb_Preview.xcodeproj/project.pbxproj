@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		FC0083BE1F535F4D0048B69B /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC0083BD1F535F4D0048B69B /* WindowController.swift */; };
+		FC0083C01F53DC960048B69B /* EventMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC0083BF1F53DC960048B69B /* EventMonitor.swift */; };
 		FC41A70E1F446A3E00E7BE7F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC41A70D1F446A3E00E7BE7F /* AppDelegate.swift */; };
 		FC41A7101F446A3E00E7BE7F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC41A70F1F446A3E00E7BE7F /* ViewController.swift */; };
 		FC41A7121F446A3E00E7BE7F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC41A7111F446A3E00E7BE7F /* Assets.xcassets */; };
@@ -17,6 +18,7 @@
 
 /* Begin PBXFileReference section */
 		FC0083BD1F535F4D0048B69B /* WindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
+		FC0083BF1F53DC960048B69B /* EventMonitor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventMonitor.swift; sourceTree = "<group>"; };
 		FC41A70A1F446A3E00E7BE7F /* Thumb_Preview.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Thumb_Preview.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC41A70D1F446A3E00E7BE7F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FC41A70F1F446A3E00E7BE7F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -58,6 +60,7 @@
 			children = (
 				FC41A70D1F446A3E00E7BE7F /* AppDelegate.swift */,
 				FC41A70F1F446A3E00E7BE7F /* ViewController.swift */,
+				FC0083BF1F53DC960048B69B /* EventMonitor.swift */,
 				FC41A7111F446A3E00E7BE7F /* Assets.xcassets */,
 				FC41A7131F446A3E00E7BE7F /* Main.storyboard */,
 				FC0083BD1F535F4D0048B69B /* WindowController.swift */,
@@ -140,6 +143,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FC41A71D1F446AEC00E7BE7F /* Preview_Window.swift in Sources */,
+				FC0083C01F53DC960048B69B /* EventMonitor.swift in Sources */,
 				FC0083BE1F535F4D0048B69B /* WindowController.swift in Sources */,
 				FC41A7101F446A3E00E7BE7F /* ViewController.swift in Sources */,
 				FC41A70E1F446A3E00E7BE7F /* AppDelegate.swift in Sources */,

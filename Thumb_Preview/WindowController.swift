@@ -13,6 +13,23 @@ class WindowController: NSWindowController {
     override func windowDidLoad() {
         super.windowDidLoad()
 
+        let (x, y) = (CGFloat(100), CGFloat(100))
+        if let delegate = NSApp.delegate as? AppDelegate {
+            let size = delegate.thumbSize
+            let contentFrame = NSRect(x: x, y: y, width: size.width, height: size.height)
+            let winFrame = window!.frameRect(forContentRect: contentFrame)
+            window!.setFrame(winFrame, display: true)
+        }
+
+    }
+
+    // ** covered by window.setFrameOrigin(NSPoint) I believe **
+    // better actually - screen coords
+    func moveWinTo(x: CGFloat, y: CGFloat) {
+        if let winFrame = window?.frame {
+            let newFrame = NSRect(x: x, y: y, width: winFrame.width, height: winFrame.height)
+            window!.setFrame(newFrame, display: true)
+        }
     }
 
     override var acceptsFirstResponder: Bool {
