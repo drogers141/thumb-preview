@@ -95,7 +95,7 @@ class ViewController: NSViewController {
 
     override func keyDown(with event: NSEvent) {
         let arrowKeys: Set = [123, 124, 125, 126]
-        let charKeys: Set = ["e", "E", "w", "m"]
+        let charKeys: Set = ["e", "E", "w", "m", "p"]
 
         if arrowKeys.contains(Int(event.keyCode)) {
             switch Int(event.keyCode) {
@@ -146,7 +146,7 @@ class ViewController: NSViewController {
                     print("win: \(win.frame)")
                 }
             case "m":
-                print("got m")
+//                print("got m")
                 if let wc = view.window?.windowController as? WindowController {
                     print("got wc")
                     let loc = NSEvent.mouseLocation()
@@ -158,6 +158,10 @@ class ViewController: NSViewController {
 ////                        view.window!.setFrameOrigin(loc)
 //                    }
                 }
+            case "p":
+                // print mouse location
+                let loc = NSEvent.mouseLocation()
+                print("mouse loc: \(loc)")
             default:
                 break
             }

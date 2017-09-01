@@ -19,13 +19,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     ]
     var thumbSize = NSRect(x: 0, y: 0, width: 120, height: 80)
 
+    let usage = "Usage: <thumb-preview> mpv-pid thumbs-dir"
+
+    var mpvBarBounds: NSRect?
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
         NSApp.activate(ignoringOtherApps: true)
-        let pid = handleCommandLineArgs()
-        print("return from handleCommandLineArgs: \(pid)")
 
-        getWinInfo(pid: pid_t(43161))
+        guard let (pid, thumbsDir) = handleCommandLineArgs() else { print(usage); return }
+        guard let winRect = getMpvWinBounds(pid: pid) else {
+            print("couldn't get mpv win bounds")
+            return
+        }
+        print("pid: \(pid), thumbs dir: \(thumbsDir)")
+        if let flipped = flip_y_coord(winRect)  {
+//                print("mpv window bounds: x=\(x), y=\(y), width=\(w), height=\(h)")
+
+            print("mpv window bounds: \(winRect)")
+            print("mpv flipped window bounds: \(flipped)")
+            mpvBarBounds = getMpvBarBounds(flippedWinBounds: flipped)
+            print("mpv bar bounds: \(mpvBarBounds)")
+        }
+
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -43,59 +59,93 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print(#function)
     }
 
-    // note - .optionOnScreenOnly brings in a bunch of crap like finder and accessibility stuff
-    // but does not seem to bring in windows from other desktops
-    func getWinInfo(pid: pid_t) {
-        if let info = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[ String : Any]] {
-            for dict in info {
-                print("dict: \(dict)")
-            }
-        }
+
+    // Usage: <thumb-preview> mpv-pid thumbs-dir
+    func handleCommandLineArgs() -> (pid_t, String)? {
+        guard CommandLine.argc == 3  else {return nil}
+
+        let firstArg = CommandLine.arguments[1]
+        print("firstArg: \(firstArg)")
+        guard !firstArg.hasPrefix("-") else {return nil}
+
+        let pid = pid_t(firstArg)!
+        let thumbsDir = String(CommandLine.arguments[2])!
+
+        return (pid, thumbsDir)
     }
 
-//    func getWinInfo_old(pid: pid_t) {
-//        if let winDicts = CGWindowListCopyWindowInfo(CGWindowListOption.optionOnScreenOnly, kCGNullWindowID) {
-//            let len = CFArrayGetCount(winDicts)
-//            for index in 0...len {
-//                let wd = CFArrayGetValueAtIndex(winDicts, index)
-//                print("window dict:\n\(String(describing: wd))\n*******************\n")
-//                var key = kCGWindowOwnerPID
-//                let val = withUnsafePointer(to: &key) { upKey in
-//                    return CFDictionaryGetValue(wd as! CFDictionary, upKey)
-//                }
-//
-////                let swiftd: CFDictionary = wd as! CFDictionary
-////                if let wpid = (swiftd as NSDictionary)[CFDictionaryGetValue] as? String {
-////                    print("pid: \(wpid)")
-////                }
-////                let wpid = CFDictionaryGetValue(wd as! CFDictionary, kCGWindowOwnerPID)
-////                let wnumber = CFDictionaryGetValue(wd as! CFDictionary, kCGWindowNumber)
-////                let wbounds = CFDictionaryGetValue(wd as! CFDictionary, kCGWindowBounds)
-////                print("pid: \(wpid), wnumber: \(wnumber), wbounds: \(wbounds)")
-////                print("******************************")
-//            }
-////             in winDicts {
-////                print("window dict:\n\(d)\n*******************\n")
-////            }
-//        }
-//    }
 
-    // returns pid of mpv instance to attach to
-    func handleCommandLineArgs() -> String {
-        if CommandLine.argc > 1 {
-            let firstArg = CommandLine.arguments[1]
-            print("firstArg: \(firstArg)")
-            guard !firstArg.hasPrefix("-") else {return "n/a"}
-            let pid = pid_t(firstArg)
-            getWinInfo(pid: pid!)
-
-            if let sharedApp = NSRunningApplication.init(processIdentifier: pid!) {
-                print("got shared app: \(sharedApp)")
-//                sharedApp.
-            }
-
-        }
-        return "pid: "
+    func flip_y_coord(_ winBounds: NSRect) -> NSRect? {
+        guard let screen = NSScreen.main() else { return nil }
+        print("#function: screen: \(screen.frame), visible: \(screen.visibleFrame)")
+        let screenH = screen.frame.height
+//        let (x, y, w, h) = winTuple
+//        print("screenH: \(screenH), y: \(y)")
+//        return (x, screenH-y, w, h)
+        return NSRect(x: winBounds.minX, y: screenH - winBounds.minY,
+                      width: winBounds.width, height: winBounds.height)
     }
+
+    // brittle way to get the bounds of the correct mpv window given the
+    // mpv pid
+    // bounds are screen coordinates, but the y needs to be flipped
+    func getMpvWinBounds(pid: pid_t) -> NSRect? {
+        let winList = getWinsInfo(pid)
+        for winDict in winList {
+//            print("mpv win:\n\(winDict)\n")
+            if let winName = winDict["kCGWindowName"] {
+                print("win with name:")
+                print("\(winDict)\n***************")
+
+                // ** note - this only occurs with the correct window, and only when it is
+                // on the same desktop (space) as the thumb-preview proc
+                //  "kCGWindowIsOnscreen": 1,
+                // so could look for that if that becomes more relevant
+
+//                print("winDict[kCGWindowName] = \(winName)")
+                if let winBounds = winDict["kCGWindowBounds"] {
+                    if let wb = winBounds as? [AnyHashable: Any] {
+//                        print("its a dict")
+
+//                        print("winBounds: \(wb)")
+                        if let h = wb["Height"] as? Int,
+                            let w = wb["Width"] as? Int,
+                            let x = wb["X"] as? Int,
+                            let y = wb["Y"] as? Int {
+//                                print("x=\(x), y=\(y), width=\(w), height=\(w)")
+                                if w > 2 && h > 2 {
+//                                    print("this is the real window")
+                                    return NSRect(x: CGFloat(x), y: CGFloat(y),
+                                                  width: CGFloat(w), height: CGFloat(h))
+                                }
+                        }
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
+    // y is flipped from CGWindowBounds
+    // returns rect that works with NSEvent mouse location on screen
+    // x,y = bottom left
+    func getMpvBarBounds(flippedWinBounds: NSRect) -> NSRect {
+        print("flippedWinBounds: \(flippedWinBounds)")
+        let left = flippedWinBounds.minX
+        let width = flippedWinBounds.width
+        let height = flippedWinBounds.height
+        let bottom = flippedWinBounds.minY - height
+        print("bottom: \(bottom), height: \(height)")
+        let leftRatio = CGFloat(0.195)
+        let rightRatio = CGFloat(0.667)
+        let topRatio = CGFloat(0.036)
+        let boxX = left + leftRatio*width
+        let boxW = (rightRatio - leftRatio) * width
+        let boxH = topRatio*height
+        let boxY = bottom
+
+        return NSRect(x: boxX, y: boxY, width: boxW, height: boxH)
+    }
+
 }
 
