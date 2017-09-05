@@ -2,6 +2,19 @@
 //  ThumbsManager.swift
 //  Thumb_Preview
 //
+//  Frames from a video are saved to one directory and named according to their time
+//  within video.  Thumbs are made available in an optimized manner, so this class has
+//  the thumbs available for display at the time, adding as they become available.
+//
+//  Given a time in seconds, this class will return the path to the best thumb available.
+//
+//  ************ move this documentation to the appropriate class/file docs **********
+//  For display when the mouse enters the seek bar of mpv this app is started or unhidden
+//  if it was already active
+//  The location of the mouse x coord in the bar is mapped to a bucket - discrete handling of
+//  a continuous data source.  For the range of x values the thumbnail shown will be the thumb
+//  corresponding to the time at the beginning of the bucket.
+//
 //  Created by David Rogers on 8/30/17.
 //  Copyright © 2017 David Rogers. All rights reserved.
 //
@@ -22,6 +35,13 @@ class ThumbsManager {
     init(thumbsDir: String, numThumbs: Int) {
         self.thumbsDir = thumbsDir
         self.numThumbs = numThumbs
+        updateThumbs()
+        print("thumbs mgr: thumbs: \(thumbs.count())")
+    }
+
+    // implement with timer - keep updating until thumbs.count() == numThumbs
+    func keepUpdatingThumbs() {
+
     }
 
     func updateThumbs() {
@@ -52,11 +72,63 @@ class ThumbsManager {
             thumbs.sync(thumbsInDir)
         }
     }
+
+    // nil if no thumbs or time is before any thumb's time
+    // return the thumb that should be displayed given the time in seconds
+    func closestThumbBefore(secs: Double) -> String? {
+        guard thumbs.count() > 0 else { print("no thumbs"); return nil }
+        guard ThumbsManager.getSecsFromThumb(thumbs.get(0)!) <= secs else {
+            print("secs: \(secs) < first thumb secs"); return nil }
+        // don't care that first iteration this stays the same
+        var current = thumbs.get(0)!
+        for i in 0...thumbs.count()-1 {
+//            print("current: \(current)")
+            if ThumbsManager.getSecsFromThumb(thumbs.get(i)!) > secs {
+                break
+            }
+            current = thumbs.get(i)!
+        }
+        return current
+    }
+
+    // thumbPath - full path of thumb
+    // expect thumb to have format: hh_mm_ss.ss.jpg
+    // e.g.: "/Users/drogers/tv/working/thumbs/00_01_01.01.jpg"
+    static func getSecsFromThumb(_ thumbPath: String) -> Double {
+        let nsPath = thumbPath as NSString
+        let filename = nsPath.lastPathComponent
+        var parts = filename.components(separatedBy: ".")
+        parts.removeLast()
+        let basename = parts.joined(separator: ".")
+        let strTime = basename.replacingOccurrences(of: "_", with: ":")
+        return ThumbsManager.convertToSecs(strTime: strTime)
+    }
+
+    // "00:01:01.01" -> 61.01
+    static func convertToSecs(strTime: String) -> Double {
+        let parts = strTime.components(separatedBy: ":").map { Double($0) }
+//        print("parts: \(parts)")
+        return parts[0]! * 3600 + parts[1]! * 60 + parts[2]!
+    }
+    // 3601.01 -> "01:00:01.010"
+    // not sure we'll need this one
+    static func convertToStrTime(secs: Double) -> String {
+        let frac = secs - floor(secs)
+        let intSecs = Int(secs)
+        let hours = intSecs / 3600
+        var remaining = intSecs % 3600
+        let minutes = remaining / 60
+        remaining %= 60
+        let secsPart = Double(remaining) + frac
+        return String(format: "%02d:%02d:%05.2f", hours, minutes, secsPart)
+    }
 }
 
 
-
 // array of String
+// sorted
+// locks access during write
+// allows multiple concurrent readers
 class SyncingArray {
 
     var elements: [String]
@@ -68,11 +140,13 @@ class SyncingArray {
     init(_ otherArray: [String]) {
         elements = [String]()
         elements.append(contentsOf: otherArray)
+        elements.sort()
     }
 
     func add(_ elem: String) {
         queue.async(flags: .barrier) {
             self.elements.append(elem)
+            self.elements.sort()
         }
     }
 
@@ -81,6 +155,7 @@ class SyncingArray {
         queue.async(flags: .barrier) {
             self.elements.removeAll()
             self.elements.append(contentsOf: otherArray)
+            self.elements.sort()
         }
     }
 
@@ -118,63 +193,4 @@ class SyncingArray {
         return count
     }
 }
-
-
-//******** Leaving generic implementation for now - need to understand more about
-// swift closures and whether or not to use a predicate to get around equals in the find()
-// method
-
-//class SynchingArray<T: Equatable> {
-//
-//    var elements: [T]
-//    let queue = DispatchQueue(label: "SynchingArrayQueue")
-//
-//    init() {
-//        elements = [T]()
-//    }
-//    init(_ otherArray: [T]) {
-//        elements = [T]()
-//        elements.append(contentsOf: otherArray)
-//    }
-//
-//    func add(_ elem: T) {
-//        queue.async(flags: .barrier) {
-//            self.elements.append(elem)
-//        }
-//    }
-//
-//    // sync to other array - replacing our contents
-//    func sync(_ otherArray: [T]) {
-//        queue.async(flags: .barrier) {
-//            self.elements.removeAll()
-//            self.elements.append(contentsOf: otherArray)
-//        }
-//    }
-//
-//    func get(_ index: Int) -> T? {
-//        var val: T?
-//        queue.sync {
-//            if elements.count > index {
-//                val = elements[index]
-//            } else {
-//                val = nil
-//            }
-//        }
-//        return val
-//    }
-//
-//    func find<T: Equatable>(_ value: T) -> Int? {
-//        var index: Int?
-//        queue.sync {
-//            for (i, e) in self.elements.enumerated() {
-//                if e == value {
-//                    index = i
-//                    break
-//                }
-//            }
-//            index = nil
-//        }
-//        return index
-//    }
-//}
 

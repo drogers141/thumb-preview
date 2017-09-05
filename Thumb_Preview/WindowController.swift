@@ -23,6 +23,10 @@ class WindowController: NSWindowController {
 
     }
 
+    func moveWin(to: NSPoint) {
+        window!.setFrameOrigin(to)
+    }
+
     // ** covered by window.setFrameOrigin(NSPoint) I believe **
     // better actually - screen coords
     func moveWinTo(x: CGFloat, y: CGFloat) {

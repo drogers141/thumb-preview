@@ -88,6 +88,11 @@ class ViewController: NSViewController {
         self.view.addSubview(imageView!)
 
     }
+    // thumb - path to thumb
+    func updateThumb(_ thumb: String) {
+        let img = NSImage(byReferencingFile: thumb)
+        imageView!.image = img
+    }
 
     override var acceptsFirstResponder: Bool {
         return true
@@ -95,7 +100,7 @@ class ViewController: NSViewController {
 
     override func keyDown(with event: NSEvent) {
         let arrowKeys: Set = [123, 124, 125, 126]
-        let charKeys: Set = ["e", "E", "w", "m", "p"]
+        let charKeys: Set = ["e", "E", "w", "m", "p", "b"]
 
         if arrowKeys.contains(Int(event.keyCode)) {
             switch Int(event.keyCode) {
@@ -145,23 +150,35 @@ class ViewController: NSViewController {
                 if let win = view.window {
                     print("win: \(win.frame)")
                 }
+                let winList = getMpvWinsInfo("rm-s3e1.mkv")
+                print(winList)
+
             case "m":
 //                print("got m")
-                if let wc = view.window?.windowController as? WindowController {
-                    print("got wc")
-                    let loc = NSEvent.mouseLocation()
-                    print("mouse loc: \(loc)")
-                    view.window!.setFrameOrigin(loc)
+                guard let delegate = NSApp.delegate as? AppDelegate else { print("** couldn't get delegate **"); return }
+                let loc = NSEvent.mouseLocation()
+                delegate.handleMouse(pos: loc)
+
+//                if let wc = view.window?.windowController as? WindowController {
+//                    print("got wc")
+//                    let loc = NSEvent.mouseLocation()
+//                    print("mouse loc: \(loc)")
+//                    view.window!.setFrameOrigin(loc)
 //                    if let loc = mouseLoc {
 //                        print("loc: \(loc)")
 ////                        wc.moveWinTo(x: loc.x, y: loc.y)
 ////                        view.window!.setFrameOrigin(loc)
 //                    }
-                }
             case "p":
                 // print mouse location
                 let loc = NSEvent.mouseLocation()
                 print("mouse loc: \(loc)")
+            case "b":
+                guard let delegate = NSApp.delegate as? AppDelegate else { print("** couldn't get delegate **"); return }
+                let mouseLoc = NSEvent.mouseLocation()
+                let inMpvBar = delegate.mpv!.barBounds!.contains(mouseLoc)
+                print("mouse loc: \(mouseLoc)")
+                print("mouse in mpv seek bar: \(inMpvBar)")
             default:
                 break
             }
