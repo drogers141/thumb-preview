@@ -17,6 +17,7 @@ class ViewController: NSViewController {
     var isMonitoringLocalEvents = false
 
     var thumbs: [String]?
+    // do we need to keep?
     var thumbSize: NSRect?
     var imageView: NSImageView?
 
@@ -26,13 +27,16 @@ class ViewController: NSViewController {
         super.viewDidLoad()
 
         guard let delegate = NSApp.delegate as? AppDelegate else { print("** couldn't get delegate **"); return }
-        thumbs = delegate.thumbs
+//        thumbs = delegate.thumbs
         thumbSize = delegate.thumbSize
 
-        let path = thumbs![0]
+//        let path = thumbs![0]
 
-        addThumbnailView(path, frame: thumbSize!)
+//        guard let mgr = delegate.thumbsMgr else { print("** couldn't get thumbs mgr **"); return }
+//        guard mgr.thumbs.count() >= 1 else { print("** no thumbs in mgr **"); return }
+//        addThumbnailView(mgr.thumbs.get(0)!, frame: thumbSize!)
 
+        addThumbnailView(thumbSize!)
         globalMonitor = GlobalEventMonitor(mask: [.mouseMoved, .leftMouseDown, .leftMouseUp]) {
             (event) -> Void in
             print("global event: \(String(describing: event))")
@@ -74,20 +78,19 @@ class ViewController: NSViewController {
         }
     }
 
-//    func
-
-    // imgfile is path to image
-    func addThumbnailView(_ imgfile: String, frame: NSRect) {
-//        let path = "/Users/drogers/Desktop/images/not-a-bug.jpg"
-//        let rect = NSRect(x: 20, y: 30, width: 100, height: 100)
-//        let imgview = NSImageView(frame: rect)
-        let img = NSImage(byReferencingFile: imgfile)
+    func addThumbnailView(_ frame: NSRect) {
         imageView = NSImageView(frame: frame)
-        imageView!.image = img
-
         self.view.addSubview(imageView!)
-
     }
+
+//    // imgfile is path to image
+//    func addThumbnailView(_ imgfile: String, frame: NSRect) {
+//        let img = NSImage(byReferencingFile: imgfile)
+//        imageView = NSImageView(frame: frame)
+//        imageView!.image = img
+//        self.view.addSubview(imageView!)
+//    }
+
     // thumb - path to thumb
     func updateThumb(_ thumb: String) {
         let img = NSImage(byReferencingFile: thumb)

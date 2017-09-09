@@ -20,8 +20,11 @@ class MPV {
     var winBounds: NSRect?
     // rect around mpv seek bar
     var barBounds: NSRect?
+    // change from bar bounds to seek range in general window
+    var seekBounds: NSRect?
+
     // mpv pid - not using as can't get pid easily from mpv
-    var pid: pid_t?
+//    var pid: pid_t?
     // use video filename instead
     // basename of file
     var vidName: String?
@@ -29,17 +32,22 @@ class MPV {
     // video play time - seconds
     var vidLength = 0.0
 
-    init(pid: pid_t, vidLength: Double) {
-        winBounds = getMpvWinBounds(pid: pid)
+    init(vidName: String, vidLength: Double) {
+        winBounds = getMpvWinBounds(vidName: vidName)
         if winBounds != nil {
             if let flipped = flip_y_coord(winBounds!) {
-                barBounds = getMpvBarBounds(flippedWinBounds: flipped)
+//                barBounds = getMpvBarBounds(flippedWinBounds: flipped)
+                seekBounds = getMpvSeekArea(flippedWinBounds: flipped)
             }
         }
-        self.pid = pid
+        self.vidName = vidName
         self.vidLength = vidLength
-        print("MPV: winBounds: \(String(describing: winBounds)), barBounds: ",
-            "\(String(describing: barBounds)), vidLength: \(vidLength)")
+//        print("MPV: vidName: \(String(describing: vidName)), ",
+//            "winBounds: \(String(describing: winBounds)), barBounds: ",
+//            "\(String(describing: barBounds)), vidLength: \(vidLength)")
+        print("MPV: vidName: \(String(describing: vidName)), ",
+            "winBounds: \(String(describing: winBounds)), seekBounds: ",
+            "\(String(describing: seekBounds)), vidLength: \(vidLength)")
     }
 
     func getSecondsFor(x: CGFloat) -> Double? {
@@ -47,14 +55,29 @@ class MPV {
         return normX * vidLength
     }
 
+//    func normalizedX(mouseX: CGFloat) -> Double? {
+//        guard barBounds != nil else { return nil }
+//        guard mouseX > barBounds!.minX && mouseX < barBounds!.maxX else { return nil }
+//        return Double((mouseX - barBounds!.minX) / barBounds!.width)
+//    }
+
     func normalizedX(mouseX: CGFloat) -> Double? {
-        guard barBounds != nil else { return nil }
-        guard mouseX > barBounds!.minX && mouseX < barBounds!.maxX else { return nil }
-        return Double((mouseX - barBounds!.minX) / barBounds!.width)
+        guard seekBounds != nil else { return nil }
+        guard mouseX > seekBounds!.minX && mouseX < seekBounds!.maxX else { return nil }
+        return Double((mouseX - seekBounds!.minX) / seekBounds!.width)
     }
 
-    func inBarBounds(point: NSPoint) -> Bool {
-        if let bb = barBounds {
+//    func inBarBounds(point: NSPoint) -> Bool {
+//        if let bb = barBounds {
+//            if bb.contains(point) {
+//                return true
+//            }
+//        }
+//        return false
+//    }
+
+    func inSeekBounds(point: NSPoint) -> Bool {
+        if let bb = seekBounds {
             if bb.contains(point) {
                 return true
             }
@@ -62,39 +85,38 @@ class MPV {
         return false
     }
 
-
-    // brittle way to get the bounds of the correct mpv window given the
-    // mpv pid
+    // use the video filename to get the mpv window
+    // if there are multiple mpv instances running with videos having the same name
+    // or where one name is a substring of another, the first found is chosen
+    //
     // bounds are screen coordinates, but the y needs to be flipped
-    private func getMpvWinBounds(pid: pid_t) -> NSRect? {
-        let winList = getWinsInfo(pid)
+    private func getMpvWinBounds(vidName: String) -> NSRect? {
+        let winList = getMpvWinsInfo(vidName)
+        guard winList.count > 0 else { return nil }
         for winDict in winList {
-            //            print("mpv win:\n\(winDict)\n")
-            if let winName = winDict["kCGWindowName"] {
-//                print("win with name:")
-//                print("\(winDict)\n***************")
+                //                print("win with name:")
+                //                print("\(winDict)\n***************")
 
                 // ** note - this only occurs with the correct window, and only when it is
                 // on the same desktop (space) as the thumb-preview proc
                 //  "kCGWindowIsOnscreen": 1,
                 // so could look for that if that becomes more relevant
 
-                //                print("winDict[kCGWindowName] = \(winName)")
-                if let winBounds = winDict["kCGWindowBounds"] {
-                    if let wb = winBounds as? [AnyHashable: Any] {
-                        //                        print("its a dict")
+            //                print("winDict[kCGWindowName] = \(winName)")
+            if let winBounds = winDict["kCGWindowBounds"] {
+                if let wb = winBounds as? [AnyHashable: Any] {
+                    //                        print("its a dict")
 
-                        //                        print("winBounds: \(wb)")
-                        if let h = wb["Height"] as? Int,
-                            let w = wb["Width"] as? Int,
-                            let x = wb["X"] as? Int,
-                            let y = wb["Y"] as? Int {
-                            //                                print("x=\(x), y=\(y), width=\(w), height=\(w)")
-                            if w > 2 && h > 2 {
-                                //                                    print("this is the real window")
-                                return NSRect(x: CGFloat(x), y: CGFloat(y),
-                                              width: CGFloat(w), height: CGFloat(h))
-                            }
+                    //                        print("winBounds: \(wb)")
+                    if let h = wb["Height"] as? Int,
+                        let w = wb["Width"] as? Int,
+                        let x = wb["X"] as? Int,
+                        let y = wb["Y"] as? Int {
+                        //                                print("x=\(x), y=\(y), width=\(w), height=\(w)")
+                        if w > 2 && h > 2 {
+                            //                                    print("this is the real window")
+                            return NSRect(x: CGFloat(x), y: CGFloat(y),
+                                          width: CGFloat(w), height: CGFloat(h))
                         }
                     }
                 }
@@ -103,10 +125,55 @@ class MPV {
         return nil
     }
 
+
+
+//    // brittle way to get the bounds of the correct mpv window given the
+//    // mpv pid
+//    // bounds are screen coordinates, but the y needs to be flipped
+//    private func getMpvWinBounds(pid: pid_t) -> NSRect? {
+//        let winList = getWinsInfo(pid)
+//        for winDict in winList {
+//            //            print("mpv win:\n\(winDict)\n")
+//            if let winName = winDict["kCGWindowName"] {
+////                print("win with name:")
+////                print("\(winDict)\n***************")
+//
+//                // ** note - this only occurs with the correct window, and only when it is
+//                // on the same desktop (space) as the thumb-preview proc
+//                //  "kCGWindowIsOnscreen": 1,
+//                // so could look for that if that becomes more relevant
+//
+//                //                print("winDict[kCGWindowName] = \(winName)")
+//                if let winBounds = winDict["kCGWindowBounds"] {
+//                    if let wb = winBounds as? [AnyHashable: Any] {
+//                        //                        print("its a dict")
+//
+//                        //                        print("winBounds: \(wb)")
+//                        if let h = wb["Height"] as? Int,
+//                            let w = wb["Width"] as? Int,
+//                            let x = wb["X"] as? Int,
+//                            let y = wb["Y"] as? Int {
+//                            //                                print("x=\(x), y=\(y), width=\(w), height=\(w)")
+//                            if w > 2 && h > 2 {
+//                                //                                    print("this is the real window")
+//                                return NSRect(x: CGFloat(x), y: CGFloat(y),
+//                                              width: CGFloat(w), height: CGFloat(h))
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return nil
+//    }
+
+    // ******* mpv osc bottombar layout ***********
+    // not working - seems like scaling is unstable
+
     // y is flipped from CGWindowBounds
     // returns rect that works with NSEvent mouse location on screen
     // x,y = bottom left
-    private func getMpvBarBounds(flippedWinBounds: NSRect) -> NSRect {
+    private func getMpvBarBounds_orig(flippedWinBounds: NSRect) -> NSRect {
         print("flippedWinBounds: \(flippedWinBounds)")
         let left = flippedWinBounds.minX
         let width = flippedWinBounds.width
@@ -130,6 +197,58 @@ class MPV {
 
         return NSRect(x: boxX, y: boxY, width: boxW, height: boxH)
     }
+
+    // ******************************
+    // rather than trying to work with bar
+    // work with bottom .25 of window - configurable as seekHeightFraction
+    // scale across the whole window
+    // perhaps flipping imageview location to left when on extreme right
+
+    // y is flipped from CGWindowBounds
+    // returns rect that works with NSEvent mouse location on screen
+    // x,y = bottom left - ratios are x from left to right, y from bottom to top
+    private func getMpvSeekArea(flippedWinBounds: NSRect) -> NSRect {
+        print("flippedWinBounds: \(flippedWinBounds)")
+        let seekHeightFraction = CGFloat(0.25)
+        let left = flippedWinBounds.minX
+        let width = flippedWinBounds.width
+        let height = flippedWinBounds.height * seekHeightFraction
+        let bottom = flippedWinBounds.minY - flippedWinBounds.height
+        print("bottom: \(bottom), height: \(height)")
+
+        return NSRect(x: left, y: bottom, width: width, height: height)
+    }
+
+
+    // ********* mpv osc slimbox layout *********
+    // y is flipped from CGWindowBounds
+    // returns rect that works with NSEvent mouse location on screen
+    // x,y = bottom left - ratios are x from left to right, y from bottom to top
+//    private func getMpvBarBounds(flippedWinBounds: NSRect) -> NSRect {
+//        print("flippedWinBounds: \(flippedWinBounds)")
+//        let left = flippedWinBounds.minX
+//        let width = flippedWinBounds.width
+//        let height = flippedWinBounds.height
+//        let bottom = flippedWinBounds.minY - height
+//        print("bottom: \(bottom), height: \(height)")
+//
+//        // change from left, right, bottom, top to
+//        // left, width, bottom, height
+//
+//        let leftRatio = CGFloat(0.268)
+//        let widthRatio = CGFloat(0.496)
+//
+//        let bottomRatio = CGFloat(0.135)
+//        let heightRatio = CGFloat(0.028)
+//
+//        let boxX = left + leftRatio*width
+//        let boxW = widthRatio*width
+//        let boxY = bottom + bottomRatio*height
+//        let boxH = heightRatio*height
+//
+//        return NSRect(x: boxX, y: boxY, width: boxW, height: boxH)
+//    }
+
 
     func flip_y_coord(_ winBounds: NSRect) -> NSRect? {
         guard let screen = NSScreen.main() else { return nil }
