@@ -102,21 +102,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-//    func handleMouse(pos: NSPoint) {
-//        guard let mpv = mpv else { print("no mpv .."); return }
-//        if mpv.inBarBounds(point: pos) {
-//            print("mouse in bar bounds")
-//            if let wc = NSApp.mainWindow?.windowController as? WindowController,
-//                let vc = NSApp.mainWindow?.contentViewController as? ViewController,
-//                let thumb = getThumbFor(mouseX: pos.x) {
-//                print("thumb: \(thumb)")
-//                wc.moveWin(to: NSPoint(x: pos.x, y: pos.y+15))
-//                vc.updateThumb(thumb)
-//            }
-//        }
-//    }
-
-
 
     // Usage: <thumb-preview> mpv-pid thumbs-dir
     func handleCommandLineArgs() -> (String, String, Int, Double)? {
