@@ -133,26 +133,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 
     func initEventMonitors() {
-        globalMonitor = GlobalEventMonitor(mask: [.mouseMoved, .leftMouseDown, .leftMouseUp]) {
+        globalMonitor = GlobalEventMonitor(mask: [.mouseMoved]) {
             (event) -> Void in
-//            print("global event: \(String(describing: event))")
-            if event?.type == NSEventType.leftMouseDown {
-                print("** global leftMouseDown **")
-            } else if event?.type == NSEventType.leftMouseUp {
-                print("** global leftMouseUp **")
-            }
             let (absX, absY) = (event?.absoluteX, event?.absoluteY)
             let (deltaX, deltaY) = (event?.deltaX, event?.deltaY)
 //            print("global \(String(describing: event?.type)) - abs pos: (\(String(describing: absX)), \(String(describing: absY))), delta: (\(String(describing: deltaX)), \(String(describing: deltaY)))\n")
         }
-        localMonitor = LocalEventMonitor(mask: [.mouseMoved, .leftMouseDown, .leftMouseUp]) {
+        localMonitor = LocalEventMonitor(mask: [.mouseMoved]) {
             (event) -> NSEvent in
-//            print("local event: \(String(describing: event))")
-            if event.type == NSEventType.leftMouseDown {
-                print("** local leftMouseDown **")
-            } else if event.type == NSEventType.leftMouseUp {
-                print("** local leftMouseUp **")
-            }
             let (absX, absY) = (event.absoluteX, event.absoluteY)
             let (deltaX, deltaY) = (event.deltaX, event.deltaY)
 //            print("local \(event.type) - abs pos: (\(absX), \(absY)), delta: (\(deltaX), \(deltaY))\n   ")

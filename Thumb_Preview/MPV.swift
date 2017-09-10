@@ -123,48 +123,6 @@ class MPV {
     }
 
 
-//    // use the video filename to get the mpv window
-//    // if there are multiple mpv instances running with videos having the same name
-//    // or where one name is a substring of another, the first found is chosen
-//    //
-//    // bounds are screen coordinates, but the y needs to be flipped
-//    private func getMpvWinBounds(vidName: String) -> NSRect? {
-//        let winList = getMpvWinsInfo(vidName)
-//        guard winList.count > 0 else { return nil }
-//        for winDict in winList {
-//            print("win with name:")
-//            print("\(winDict)\n***************")
-//
-//                // ** note - this only occurs with the correct window, and only when it is
-//                // on the same desktop (space) as the thumb-preview proc
-//                //  "kCGWindowIsOnscreen": 1,
-//                // so could look for that if that becomes more relevant
-//
-//            //                print("winDict[kCGWindowName] = \(winName)")
-//            if let winBounds = winDict["kCGWindowBounds"] {
-//                if let wb = winBounds as? [AnyHashable: Any] {
-//                    //                        print("its a dict")
-//
-//                    //                        print("winBounds: \(wb)")
-//                    if let h = wb["Height"] as? Int,
-//                        let w = wb["Width"] as? Int,
-//                        let x = wb["X"] as? Int,
-//                        let y = wb["Y"] as? Int {
-//                        //                                print("x=\(x), y=\(y), width=\(w), height=\(w)")
-//                        if w > 2 && h > 2 {
-//                            //                                    print("this is the real window")
-//                            return NSRect(x: CGFloat(x), y: CGFloat(y),
-//                                          width: CGFloat(w), height: CGFloat(h))
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        return nil
-//    }
-
-
-
     // seek area is part of window with x mapped to seek
     // implemented in lua
     // work with bottom .25 of window - configurable as seekHeightFraction
