@@ -21,6 +21,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     "    vid-length - string time format from ffmpeg - e.g. 00:30:00.00"
     ].joined(separator: "\n")
 
+    var globalMonitor: GlobalEventMonitor?
+    var localMonitor: LocalEventMonitor?
+
     var mpvVidName: String?
     var mpv: MPV?
     var vidLength: Double?
@@ -46,6 +49,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         thumbsMgr = ThumbsManager(thumbsDir: thumbsDir, numThumbs: thumbsCount)
         NSLog("appdelegate - thumbs: \(Int((thumbsMgr?.thumbs.count())!))")
 
+        initEventMonitors()
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -67,10 +71,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             print("** couldn't get viewcontroller")
             return
         }
+        print("event monitor: stop global, start local")
+        handleEventMonitor(monitor: localMonitor!, action: "start")
+        handleEventMonitor(monitor: globalMonitor!, action: "stop")
     }
 
     func applicationDidResignActive(_ notification: Notification) {
         print(#function)
+        print("event monitor: stop local, start global")
+        handleEventMonitor(monitor: localMonitor!, action: "stop")
+        handleEventMonitor(monitor: globalMonitor!, action: "start")
     }
 
     func getThumbFor(mouseX: CGFloat) -> String? {
@@ -96,7 +106,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 let vc = NSApp.mainWindow?.contentViewController as? ViewController,
                 let thumb = getThumbFor(mouseX: pos.x) {
                 print("thumb: \(thumb)")
-                wc.moveWin(to: NSPoint(x: pos.x, y: pos.y+15))
+                wc.moveWin(to: NSPoint(x: pos.x, y: pos.y+5))
                 vc.updateThumb(thumb)
             }
         }
@@ -121,6 +131,69 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
 
+    func initEventMonitors() {
+        globalMonitor = GlobalEventMonitor(mask: [.mouseMoved, .leftMouseDown, .leftMouseUp]) {
+            (event) -> Void in
+            print("global event: \(String(describing: event))")
+            if event?.type == NSEventType.leftMouseDown {
+                print("** global leftMouseDown **")
+            } else if event?.type == NSEventType.leftMouseUp {
+                print("** global leftMouseUp **")
+            }
+            let (absX, absY) = (event?.absoluteX, event?.absoluteY)
+            let (deltaX, deltaY) = (event?.deltaX, event?.deltaY)
+            print("global \(String(describing: event?.type)) - abs pos: (\(String(describing: absX)), \(String(describing: absY))), delta: (\(String(describing: deltaX)), \(String(describing: deltaY)))\n")
+        }
+        localMonitor = LocalEventMonitor(mask: [.mouseMoved, .leftMouseDown, .leftMouseUp]) {
+            (event) -> NSEvent in
+            print("local event: \(String(describing: event))")
+            if event.type == NSEventType.leftMouseDown {
+                print("** local leftMouseDown **")
+            } else if event.type == NSEventType.leftMouseUp {
+                print("** local leftMouseUp **")
+            }
+            let (absX, absY) = (event.absoluteX, event.absoluteY)
+            let (deltaX, deltaY) = (event.deltaX, event.deltaY)
+            print("local \(event.type) - abs pos: (\(absX), \(absY)), delta: (\(deltaX), \(deltaY))\n   ")
+//            self.mouseLoc = NSPoint(x: CGFloat(absX), y: CGFloat(absY))
+//            print("mouseLoc: \(self.mouseLoc!)")
 
+            return event
+        }
+    }
+
+    // whichMonitor := "local" | "global"
+    // action := "start" | "stop"
+    // idempotent
+    private func handleEventMonitor(monitor: EventMonitor, action: String) {
+
+        if action == "start" {
+            if !monitor.isMonitoring {
+                monitor.start()
+            }
+        } else if action == "stop" {
+            if monitor.isMonitoring {
+                monitor.stop()
+            }
+        }
+    }
+//        var monitor: Any?
+//        var flag: Bool?
+//
+//        if whichMonitor == "local" {
+//            monitor = localMonitor
+//            flag = isMonitoringLocalEvents
+//        } else if whichMonitor == "global" {
+//            monitor = globalMonitor
+//            flag = isMonitoringGlobalEvents
+//        }
+//        if monitor != nil {
+//            if action == "start" && !flag! {
+//                monitor.start()
+//            } else if action == "stop" && flag! {
+//                monitor.stop()
+//            }
+//        }
+//    }
 }
 

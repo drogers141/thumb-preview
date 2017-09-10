@@ -131,7 +131,7 @@ class MPV {
 
     func flip_y_coord(_ winBounds: NSRect) -> NSRect? {
         guard let screen = NSScreen.main() else { return nil }
-        print("#function: screen: \(screen.frame), visible: \(screen.visibleFrame)")
+        print("\(#function): screen: \(screen.frame), visible: \(screen.visibleFrame)")
         let screenH = screen.frame.height
         //        let (x, y, w, h) = winTuple
         //        print("screenH: \(screenH), y: \(y)")
