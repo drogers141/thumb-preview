@@ -94,6 +94,11 @@ class ViewController: NSViewController {
                 // print mouse location
                 let loc = NSEvent.mouseLocation()
                 print("mouse loc: \(loc)")
+                // print frontmost application
+                let ws = NSWorkspace.shared()
+                if let active = ws.frontmostApplication {
+                    print(active)
+                }
             case "b":
                 print("got b")
 

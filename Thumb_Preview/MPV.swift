@@ -30,16 +30,20 @@ class MPV {
     // video play time - seconds
     var vidLength = 0.0
 
+    var pid: pid_t?
+
     init(vidName: String, vidLength: Double) {
-        winBounds = getMpvWinBounds(vidName: vidName)
+        let winList = getMpvWinsInfo(vidName)
+        winBounds = getMpvWinBounds(winList: winList)
         if winBounds != nil {
             if let flipped = flip_y_coord(winBounds!) {
                 seekBounds = getMpvSeekArea(flippedWinBounds: flipped)
             }
         }
+        pid = getPid(winList: winList)
         self.vidName = vidName
         self.vidLength = vidLength
-        print("MPV: vidName: \(String(describing: vidName)), ",
+        print("MPV: vidName: \(String(describing: vidName)), pid: \(String(describing: pid)), ",
             "winBounds: \(String(describing: winBounds)), seekBounds: ",
             "\(String(describing: seekBounds)), vidLength: \(vidLength)")
     }
@@ -66,22 +70,34 @@ class MPV {
         return false
     }
 
-    // use the video filename to get the mpv window
+    // get pid from window list
+    private func getPid(winList: [[ String: Any ]]) -> pid_t? {
+        guard winList.count > 0 else { return nil }
+        let winDict = winList[0]
+        if let p = winDict["kCGWindowOwnerPID"],
+            let winPid = p as? pid_t {
+            return winPid
+        } else {
+            return nil
+        }
+    }
+
+
+    // get the mpv window from list of windows
     // if there are multiple mpv instances running with videos having the same name
     // or where one name is a substring of another, the first found is chosen
     //
     // bounds are screen coordinates, but the y needs to be flipped
-    private func getMpvWinBounds(vidName: String) -> NSRect? {
-        let winList = getMpvWinsInfo(vidName)
+    private func getMpvWinBounds(winList: [[ String: Any ]]) -> NSRect? {
         guard winList.count > 0 else { return nil }
         for winDict in winList {
-                //                print("win with name:")
-                //                print("\(winDict)\n***************")
+//            print("win with name:")
+//            print("\(winDict)\n***************")
 
-                // ** note - this only occurs with the correct window, and only when it is
-                // on the same desktop (space) as the thumb-preview proc
-                //  "kCGWindowIsOnscreen": 1,
-                // so could look for that if that becomes more relevant
+            // ** note - this only occurs with the correct window, and only when it is
+            // on the same desktop (space) as the thumb-preview proc
+            //  "kCGWindowIsOnscreen": 1,
+            // so could look for that if that becomes more relevant
 
             //                print("winDict[kCGWindowName] = \(winName)")
             if let winBounds = winDict["kCGWindowBounds"] {
@@ -105,6 +121,48 @@ class MPV {
         }
         return nil
     }
+
+
+//    // use the video filename to get the mpv window
+//    // if there are multiple mpv instances running with videos having the same name
+//    // or where one name is a substring of another, the first found is chosen
+//    //
+//    // bounds are screen coordinates, but the y needs to be flipped
+//    private func getMpvWinBounds(vidName: String) -> NSRect? {
+//        let winList = getMpvWinsInfo(vidName)
+//        guard winList.count > 0 else { return nil }
+//        for winDict in winList {
+//            print("win with name:")
+//            print("\(winDict)\n***************")
+//
+//                // ** note - this only occurs with the correct window, and only when it is
+//                // on the same desktop (space) as the thumb-preview proc
+//                //  "kCGWindowIsOnscreen": 1,
+//                // so could look for that if that becomes more relevant
+//
+//            //                print("winDict[kCGWindowName] = \(winName)")
+//            if let winBounds = winDict["kCGWindowBounds"] {
+//                if let wb = winBounds as? [AnyHashable: Any] {
+//                    //                        print("its a dict")
+//
+//                    //                        print("winBounds: \(wb)")
+//                    if let h = wb["Height"] as? Int,
+//                        let w = wb["Width"] as? Int,
+//                        let x = wb["X"] as? Int,
+//                        let y = wb["Y"] as? Int {
+//                        //                                print("x=\(x), y=\(y), width=\(w), height=\(w)")
+//                        if w > 2 && h > 2 {
+//                            //                                    print("this is the real window")
+//                            return NSRect(x: CGFloat(x), y: CGFloat(y),
+//                                          width: CGFloat(w), height: CGFloat(h))
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return nil
+//    }
+
 
 
     // seek area is part of window with x mapped to seek

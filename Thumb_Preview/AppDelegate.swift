@@ -21,6 +21,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     "    vid-length - string time format from ffmpeg - e.g. 00:30:00.00"
     ].joined(separator: "\n")
 
+    // track mouse movement on screen
     var globalMonitor: GlobalEventMonitor?
     var localMonitor: LocalEventMonitor?
 
@@ -134,7 +135,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func initEventMonitors() {
         globalMonitor = GlobalEventMonitor(mask: [.mouseMoved, .leftMouseDown, .leftMouseUp]) {
             (event) -> Void in
-            print("global event: \(String(describing: event))")
+//            print("global event: \(String(describing: event))")
             if event?.type == NSEventType.leftMouseDown {
                 print("** global leftMouseDown **")
             } else if event?.type == NSEventType.leftMouseUp {
@@ -142,11 +143,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             let (absX, absY) = (event?.absoluteX, event?.absoluteY)
             let (deltaX, deltaY) = (event?.deltaX, event?.deltaY)
-            print("global \(String(describing: event?.type)) - abs pos: (\(String(describing: absX)), \(String(describing: absY))), delta: (\(String(describing: deltaX)), \(String(describing: deltaY)))\n")
+//            print("global \(String(describing: event?.type)) - abs pos: (\(String(describing: absX)), \(String(describing: absY))), delta: (\(String(describing: deltaX)), \(String(describing: deltaY)))\n")
         }
         localMonitor = LocalEventMonitor(mask: [.mouseMoved, .leftMouseDown, .leftMouseUp]) {
             (event) -> NSEvent in
-            print("local event: \(String(describing: event))")
+//            print("local event: \(String(describing: event))")
             if event.type == NSEventType.leftMouseDown {
                 print("** local leftMouseDown **")
             } else if event.type == NSEventType.leftMouseUp {
@@ -154,15 +155,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             let (absX, absY) = (event.absoluteX, event.absoluteY)
             let (deltaX, deltaY) = (event.deltaX, event.deltaY)
-            print("local \(event.type) - abs pos: (\(absX), \(absY)), delta: (\(deltaX), \(deltaY))\n   ")
-//            self.mouseLoc = NSPoint(x: CGFloat(absX), y: CGFloat(absY))
-//            print("mouseLoc: \(self.mouseLoc!)")
+//            print("local \(event.type) - abs pos: (\(absX), \(absY)), delta: (\(deltaX), \(deltaY))\n   ")
 
             return event
         }
     }
 
-    // whichMonitor := "local" | "global"
     // action := "start" | "stop"
     // idempotent
     private func handleEventMonitor(monitor: EventMonitor, action: String) {
@@ -177,23 +175,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
     }
-//        var monitor: Any?
-//        var flag: Bool?
-//
-//        if whichMonitor == "local" {
-//            monitor = localMonitor
-//            flag = isMonitoringLocalEvents
-//        } else if whichMonitor == "global" {
-//            monitor = globalMonitor
-//            flag = isMonitoringGlobalEvents
-//        }
-//        if monitor != nil {
-//            if action == "start" && !flag! {
-//                monitor.start()
-//            } else if action == "stop" && flag! {
-//                monitor.stop()
-//            }
-//        }
-//    }
+
 }
 
