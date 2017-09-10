@@ -58,10 +58,3 @@ func printAllWinsInfo() {
     }
 }
 
-//  Example of using NSRunningApplication
-//
-//        if let sharedApp = NSRunningApplication.init(processIdentifier: pid!) {
-//            print("got shared app: \(sharedApp)")
-////                sharedApp.
-//        }
-

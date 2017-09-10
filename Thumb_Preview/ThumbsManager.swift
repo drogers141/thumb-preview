@@ -27,14 +27,11 @@ class ThumbsManager {
     var thumbs = SyncingArray()
     // thumbs directory we may need to keep observing as more thumbs are written to it
     var thumbsDir = ""
-    // number of thumbs expected - we can stop observing once thumbs.count = this
-    var numThumbs = 0
 
     let thumbFileExts = [".jpg"]
 
-    init(thumbsDir: String, numThumbs: Int) {
+    init(thumbsDir: String) {
         self.thumbsDir = thumbsDir
-        self.numThumbs = numThumbs
         updateThumbs()
         print("thumbs mgr: thumbs: \(thumbs.count())")
     }

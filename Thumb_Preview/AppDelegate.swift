@@ -14,11 +14,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var thumbSize = NSRect(x: 0, y: 0, width: 120, height: 80)
 
     let usage = [
-    "Usage: <thumb-preview> vid-name thumbs-dir thumbs-count vid-length",
+    "Usage: <thumb-preview> vid-name thumbs-dir vid-length",
     "    vid-name - basename of video file path",
-    "    thumbs-count - expected number of thumbs total",
+    "    thumbs-dir - directory where thumbnails are written",
     "    vid-length - float - duration of video in seconds",
-    "    vid-length - string time format from ffmpeg - e.g. 00:30:00.00"
     ].joined(separator: "\n")
 
     // track mouse movement on screen
@@ -33,13 +32,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
-        guard let (vidName, thumbsDir, thumbsCount, vidLength) = handleCommandLineArgs() else {
+        guard let (vidName, thumbsDir, vidLength) = handleCommandLineArgs() else {
             print(usage)
             NSApp.terminate(nil)
             return
         }
         NSApp.activate(ignoringOtherApps: true)
-        print("vid name: \(vidName), thumbs dir: \(thumbsDir), thumbs count: \(thumbsCount), duration: \(vidLength)")
+        print("vid name: \(vidName), thumbs dir: \(thumbsDir), duration: \(vidLength)")
         self.mpvVidName = vidName
         self.vidLength = vidLength
 //        vidLengthSecs = ThumbsManager.convertToSecs(strTime: vidLengthStr)
@@ -47,7 +46,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // fail if we don't have mpv
         mpv = MPV(vidName: vidName, vidLength: vidLength)
 
-        thumbsMgr = ThumbsManager(thumbsDir: thumbsDir, numThumbs: thumbsCount)
+        thumbsMgr = ThumbsManager(thumbsDir: thumbsDir)
         NSLog("appdelegate - thumbs: \(Int((thumbsMgr?.thumbs.count())!))")
 
         initEventMonitors()
@@ -115,10 +114,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 
     // Usage: <thumb-preview> mpv-pid thumbs-dir
-    func handleCommandLineArgs() -> (String, String, Int, Double)? {
+    func handleCommandLineArgs() -> (String, String, Double)? {
         print("CommandLine.argc \(CommandLine.argc)")
         print("CommandLine.arguments \(CommandLine.arguments)")
-        guard CommandLine.argc == 5  else {return nil}
+        guard CommandLine.argc == 4  else {return nil}
 
         let firstArg = CommandLine.arguments[1]
         print("firstArg: \(firstArg)")
@@ -126,9 +125,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let vidName = String(firstArg)!
         let thumbsDir = String(CommandLine.arguments[2])!
-        let thumbsCount = Int(CommandLine.arguments[3])!
-        let vidLength = Double(CommandLine.arguments[4])!
-        return (vidName, thumbsDir, thumbsCount, vidLength)
+        let vidLength = Double(CommandLine.arguments[3])!
+        return (vidName, thumbsDir, vidLength)
     }
 
 
