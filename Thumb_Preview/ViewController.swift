@@ -10,12 +10,6 @@ import Cocoa
 
 class ViewController: NSViewController {
 
-    var globalMonitor: GlobalEventMonitor?
-    var isMonitoringGlobalEvents = false
-
-    var localMonitor: LocalEventMonitor?
-    var isMonitoringLocalEvents = false
-
     var thumbs: [String]?
     // do we need to keep?
     var thumbSize: NSRect?
@@ -29,36 +23,6 @@ class ViewController: NSViewController {
         guard let delegate = NSApp.delegate as? AppDelegate else { print("** couldn't get delegate **"); return }
         thumbSize = delegate.thumbSize
         addThumbnailView(thumbSize!)
-
-        globalMonitor = GlobalEventMonitor(mask: [.mouseMoved, .leftMouseDown, .leftMouseUp]) {
-            (event) -> Void in
-            print("global event: \(String(describing: event))")
-            if event?.type == NSEventType.leftMouseDown {
-                print("** global leftMouseDown **")
-            } else if event?.type == NSEventType.leftMouseUp {
-                print("** global leftMouseUp **")
-            }
-            let (absX, absY) = (event?.absoluteX, event?.absoluteY)
-            let (deltaX, deltaY) = (event?.deltaX, event?.deltaY)
-            print("global \(String(describing: event?.type)) - abs pos: (\(String(describing: absX)), \(String(describing: absY))), delta: (\(String(describing: deltaX)), \(String(describing: deltaY)))\n")
-        }
-
-        localMonitor = LocalEventMonitor(mask: [.mouseMoved, .leftMouseDown, .leftMouseUp]) {
-            (event) -> NSEvent in
-            print("local event: \(String(describing: event))")
-            if event.type == NSEventType.leftMouseDown {
-                print("** local leftMouseDown **")
-            } else if event.type == NSEventType.leftMouseUp {
-                print("** local leftMouseUp **")
-            }
-            let (absX, absY) = (event.absoluteX, event.absoluteY)
-            let (deltaX, deltaY) = (event.deltaX, event.deltaY)
-            print("local \(event.type) - abs pos: (\(absX), \(absY)), delta: (\(deltaX), \(deltaY))\n   ")
-            self.mouseLoc = NSPoint(x: CGFloat(absX), y: CGFloat(absY))
-            print("mouseLoc: \(self.mouseLoc!)")
-
-            return event
-        }
 
         DispatchQueue.main.async {
             self.view.window?.makeFirstResponder(self)
@@ -111,35 +75,14 @@ class ViewController: NSViewController {
             switch event.characters! {
             case "e":
                 print("got e")
-                if !isMonitoringGlobalEvents {
-                    print("starting to monitor mouse")
-                    isMonitoringGlobalEvents = true
-                    globalMonitor?.start()
-
-                } else {
-                    print("stopping the monitor")
-                    isMonitoringGlobalEvents = false
-                    globalMonitor?.stop()
-                }
 
             case "E":
                 print("got E")
-                if !isMonitoringLocalEvents {
-                    print("starting to monitor mouse - local")
-                    isMonitoringLocalEvents = true
-                    localMonitor?.start()
 
-                } else {
-                    print("stopping the local monitor")
-                    isMonitoringLocalEvents = false
-                    localMonitor?.stop()
-                }
             case "w":
                 if let win = view.window {
                     print("win: \(win.frame)")
                 }
-                let winList = getMpvWinsInfo("rm-s3e1.mkv")
-                print(winList)
 
             case "m":
 //                print("got m")
