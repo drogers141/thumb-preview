@@ -28,17 +28,36 @@ class ThumbsManager {
     // thumbs directory we may need to keep observing as more thumbs are written to it
     var thumbsDir = ""
 
+    // related to syncing thumbs
+    var lastThumbsCt = 0
+    var numTimesSameThumbCt = 0
+    let timerDelay = 1.0
+    let numTimesToConfirmThumbCt = 10
+
     let thumbFileExts = [".jpg"]
 
     init(thumbsDir: String) {
         self.thumbsDir = thumbsDir
-        updateThumbs()
+        keepUpdatingThumbs()
         print("thumbs mgr: thumbs: \(thumbs.count())")
     }
 
     // implement with timer - keep updating until thumbs.count() == numThumbs
-    func keepUpdatingThumbs() {
-
+    @objc func keepUpdatingThumbs() {
+        NSLog("\(#function) - lastThumbsCt: \(lastThumbsCt), numTimesSameThumbCt: \(numTimesSameThumbCt)")
+        updateThumbs()
+        if numTimesSameThumbCt < numTimesToConfirmThumbCt {
+            let thumbsCt = thumbs.count()
+            if thumbsCt > 0 && thumbsCt == lastThumbsCt {
+                numTimesSameThumbCt += 1
+            } else {
+                numTimesSameThumbCt = 0
+            }
+            lastThumbsCt = thumbsCt
+            Timer.scheduledTimer(timeInterval: timerDelay, target: self,
+                                 selector: #selector(keepUpdatingThumbs),
+                                 userInfo: nil, repeats: false)
+        }
     }
 
     func updateThumbs() {
