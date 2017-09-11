@@ -58,7 +58,51 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         initEventMonitors()
         handleEventMonitor(monitor: globalMonitor!, action: "start")
+
+        // get notified of all processes terminating - note this doesn't effectively work
+        NSWorkspace.shared().notificationCenter.addObserver(self, selector: #selector(handleProcessTerminated),
+                                                            name: NSNotification.Name.NSWorkspaceDidTerminateApplication,
+                                                            object: nil)
+        // but this works fine
+        NSWorkspace.shared().notificationCenter.addObserver(self, selector: #selector(activated),
+                                                            name: NSNotification.Name.NSWorkspaceDidActivateApplication,
+                                                            object: nil)
     }
+
+    // handle did activate notification
+    func activated(notification: NSNotification) {
+        if let info = notification.userInfo,
+            let app = info[NSWorkspaceApplicationKey] as? NSRunningApplication {
+            print("app activated: \(app)")
+        }
+    }
+
+    // terminate once our mpv process terminates
+    func handleProcessTerminated(notification: NSNotification) {
+        if let info = notification.userInfo,
+            let app = info[NSWorkspaceApplicationKey] as? NSRunningApplication {
+            let msg = "app terminated: \(app)"
+            print(msg)
+            if app.processIdentifier == mpv?.pid {
+                print("mpv terminated, bye ..")
+                NSApp.terminate(nil)
+            }
+        } else {
+            print("\(#function) - couldn't get notification info")
+        }
+    }
+
+    // example of nsalert
+    // let answer = dialogOKCancel(question: msg, text: "ok")
+//    func dialogOKCancel(question: String, text: String) -> Bool {
+//        let alert = NSAlert()
+//        alert.messageText = question
+//        alert.informativeText = text
+//        alert.alertStyle = NSAlertStyle.warning
+//        alert.addButton(withTitle: "OK")
+//        alert.addButton(withTitle: "Cancel")
+//        return alert.runModal() == NSAlertFirstButtonReturn
+//    }
 
     func applicationWillTerminate(_ aNotification: Notification) {
         // Insert code here to tear down your application
@@ -87,6 +131,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("event monitor: stop local, start global")
         handleEventMonitor(monitor: localMonitor!, action: "stop")
         handleEventMonitor(monitor: globalMonitor!, action: "start")
+        if let vc = NSApp.mainWindow?.contentViewController as? ViewController {
+            print("got vc removing thumbnailview")
+            vc.removeThumbnailView()
+        }
     }
 
     func getThumbFor(mouseX: CGFloat) -> String? {
@@ -98,8 +146,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let thumb = mgr.closestThumbBefore(secs: secs) else {
             print("no closest thumb"); return nil
         }
-        let strTime = ThumbsManager.convertToStrTime(secs: secs)
-        print("mouseX: \(mouseX), seconds: \(secs) - strTime: \(strTime)\n\(thumb)")
+//        let strTime = ThumbsManager.convertToStrTime(secs: secs)
+//        print("mouseX: \(mouseX), seconds: \(secs) - strTime: \(strTime)\n\(thumb)")
         return thumb
     }
 
@@ -107,11 +155,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func handleMouse(pos: NSPoint) {
         guard let mpv = mpv else { print("no mpv .."); return }
         if mpv.inSeekBounds(point: pos) {
-            print("mouse in seek bounds")
+//            print("mouse in seek bounds")
             if let wc = NSApp.mainWindow?.windowController as? WindowController,
                 let vc = NSApp.mainWindow?.contentViewController as? ViewController,
                 let thumb = getThumbFor(mouseX: pos.x) {
-                print("thumb: \(thumb)")
+//                print("thumb: \(thumb)")
                 wc.moveWin(to: NSPoint(x: pos.x, y: pos.y+5))
                 vc.updateThumb(thumb)
             }
@@ -155,7 +203,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //            print("event: \(String(describing: event))")
             if let mpv = self.mpv {
                 if mpv.mpvIsActiveApp() {
-                    print("mpv active app")
+//                    print("mpv active app")
                     if mpv.inSeekBounds(point: NSEvent.mouseLocation()) {
                         print("****** global in seek bounds *****")
                         NSApp.activate(ignoringOtherApps: true)
@@ -171,7 +219,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //                    print("****** local in seek bounds *****")
                     self.handleMouse(pos: NSEvent.mouseLocation())
                 } else {
-                    NSApp.deactivate()
+                    print("local mouse out of seek area - hiding")
+//                    NSApp.deactivate()
+                    NSApp.hide(nil)
                 }
             }
             return event
