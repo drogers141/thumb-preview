@@ -2,9 +2,6 @@
 //  MPV.swift
 //
 //  Encapsulates state of the MPV player
-//  Note - This is a short-lived object
-//      Resizing of the window invalidates
-//      If Thumb_Preview exists and becomes unhidden, a new MPV should be created
 //
 //  Created by David Rogers on 9/3/17.
 //  Copyright © 2017 David Rogers. All rights reserved.
@@ -46,6 +43,29 @@ class MPV {
         print("MPV: vidName: \(String(describing: vidName)), pid: \(String(describing: pid)), ",
             "winBounds: \(String(describing: winBounds)), seekBounds: ",
             "\(String(describing: seekBounds)), vidLength: \(vidLength)")
+    }
+
+    // call if chance of mpv window resizing
+    func resetWinBounds() {
+        print(#function)
+        let winList = getMpvWinsInfo(vidName!)
+        winBounds = getMpvWinBounds(winList: winList)
+        if winBounds != nil {
+            if let flipped = flip_y_coord(winBounds!) {
+                seekBounds = getMpvSeekArea(flippedWinBounds: flipped)
+                print("seekBounds: \(String(describing: seekBounds))")
+            }
+        }
+    }
+
+    func mpvIsActiveApp() -> Bool {
+//        print(#function)
+        if let pid = pid,
+            let sharedApp = NSRunningApplication.init(processIdentifier: pid) {
+//            print(#function, "sharedApp: \(sharedApp)")
+            return sharedApp.isActive
+        }
+        return false
     }
 
     func getSecondsFor(x: CGFloat) -> Double? {

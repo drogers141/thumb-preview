@@ -20,13 +20,19 @@ class ViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        guard let delegate = NSApp.delegate as? AppDelegate else { print("** couldn't get delegate **"); return }
-        thumbSize = delegate.thumbSize
-        addThumbnailView(thumbSize!)
-
         DispatchQueue.main.async {
             self.view.window?.makeFirstResponder(self)
         }
+    }
+
+    override func viewWillAppear() {
+        guard let delegate = NSApp.delegate as? AppDelegate else { print("** couldn't get delegate **"); return }
+        thumbSize = delegate.thumbSize
+        addThumbnailView(thumbSize!)
+    }
+
+    override func viewWillDisappear() {
+        removeThumbnailView()
     }
 
     override var representedObject: Any? {
@@ -36,8 +42,17 @@ class ViewController: NSViewController {
     }
 
     func addThumbnailView(_ frame: NSRect) {
+        NSLog(#function)
         imageView = NSImageView(frame: frame)
         self.view.addSubview(imageView!)
+    }
+
+    func removeThumbnailView() {
+        NSLog(#function)
+        if let v = self.imageView {
+            self.imageView?.removeFromSuperview()
+            NSLog("removed")
+        }
     }
 
     // thumb - path to thumb
@@ -98,6 +113,7 @@ class ViewController: NSViewController {
                 let ws = NSWorkspace.shared()
                 if let active = ws.frontmostApplication {
                     print(active)
+                    print("pid: \(active.processIdentifier)")
                 }
             case "b":
                 print("got b")

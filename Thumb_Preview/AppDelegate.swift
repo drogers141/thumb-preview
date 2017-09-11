@@ -14,10 +14,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var thumbSize = NSRect(x: 0, y: 0, width: 120, height: 80)
 
     let usage = [
-    "Usage: <thumb-preview> vid-name thumbs-dir vid-length",
+    "Usage: <thumb-preview> [opt] vid-name thumbs-dir vid-length",
     "    vid-name - basename of video file path",
     "    thumbs-dir - directory where thumbnails are written",
     "    vid-length - float - duration of video in seconds",
+    "    Options:",
+    "        --thumb-size=THUMB_SIZE - THUMB_SIZE := wxh",
+    "            e.g. 160x100, default is 120x80"
     ].joined(separator: "\n")
 
     // track mouse movement on screen
@@ -32,13 +35,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
-        guard let (vidName, thumbsDir, vidLength) = handleCommandLineArgs() else {
+        guard let (thumbWH, vidName, thumbsDir, vidLength) = handleCommandLineArgs() else {
             print(usage)
             NSApp.terminate(nil)
             return
         }
-        NSApp.activate(ignoringOtherApps: true)
+//        NSApp.activate(ignoringOtherApps: true)
         print("vid name: \(vidName), thumbs dir: \(thumbsDir), duration: \(vidLength)")
+        if let (tWidth, tHeight) = thumbWH {
+            print("thumbSize: (\(tWidth), \(tHeight))")
+            thumbSize = NSRect(x: 0, y: 0, width: CGFloat(tWidth), height: CGFloat(tHeight))
+        }
         self.mpvVidName = vidName
         self.vidLength = vidLength
 //        vidLengthSecs = ThumbsManager.convertToSecs(strTime: vidLengthStr)
@@ -47,9 +54,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         mpv = MPV(vidName: vidName, vidLength: vidLength)
 
         thumbsMgr = ThumbsManager(thumbsDir: thumbsDir)
-        NSLog("appdelegate - thumbs: \(Int((thumbsMgr?.thumbs.count())!))")
+        NSLog("appdelegate - \(#function) - thumbs: \(Int((thumbsMgr?.thumbs.count())!))")
 
         initEventMonitors()
+        handleEventMonitor(monitor: globalMonitor!, action: "start")
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -62,15 +70,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidBecomeActive(_ notification: Notification) {
         print(#function)
-        print("creating new mpv object")
-        guard let vidName = mpvVidName else { print("no video file name .."); return }
-        guard let vidLength = self.vidLength else { print("no video length .."); return }
-        mpv = MPV(vidName: vidName, vidLength: vidLength)
-
-        guard let vc = NSApp.mainWindow?.contentViewController as? ViewController else {
-            print("** couldn't get viewcontroller")
-            return
+        if let mpv = mpv {
+            mpv.resetWinBounds()
         }
+//        guard let vc = NSApp.mainWindow?.contentViewController as? ViewController else {
+//            print("** couldn't get viewcontroller")
+//            return
+//        }
         print("event monitor: stop global, start local")
         handleEventMonitor(monitor: localMonitor!, action: "start")
         handleEventMonitor(monitor: globalMonitor!, action: "stop")
@@ -114,35 +120,60 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 
     // Usage: <thumb-preview> mpv-pid thumbs-dir
-    func handleCommandLineArgs() -> (String, String, Double)? {
-        print("CommandLine.argc \(CommandLine.argc)")
-        print("CommandLine.arguments \(CommandLine.arguments)")
-        guard CommandLine.argc == 4  else {return nil}
+    func handleCommandLineArgs() -> ((Int, Int)?, String, String, Double)? {
+//        print("CommandLine.argc \(CommandLine.argc)")
+//        print("CommandLine.arguments \(CommandLine.arguments)")
+        guard [4, 5].contains(CommandLine.argc)  else {return nil}
 
-        let firstArg = CommandLine.arguments[1]
-        print("firstArg: \(firstArg)")
-        guard !firstArg.hasPrefix("-") else {return nil}
+        var thumbSize: (Int, Int)?
+        var args = CommandLine.arguments
+        args.remove(at: 0)
+        if args.count == 4 {
+            let opt = args.remove(at: 0)
+            if opt.hasPrefix("--") && opt.contains("=") && opt.contains("x") {
+                let thumbSizeStr = opt.components(separatedBy: "=")[1]
+                let vals = thumbSizeStr.components(separatedBy: "x").map { Int($0) }
+                thumbSize = (vals[0]!, vals[1]!) as (Int, Int)
+            } else {
+                return nil
+            }
+        }
+        guard !args[0].hasPrefix("-") else {return nil}
 
-        let vidName = String(firstArg)!
-        let thumbsDir = String(CommandLine.arguments[2])!
-        let vidLength = Double(CommandLine.arguments[3])!
-        return (vidName, thumbsDir, vidLength)
+        let vidName = args[0]
+        let thumbsDir = args[1]
+        let vidLength = Double(args[2])!
+        return (thumbSize, vidName, thumbsDir, vidLength)
     }
 
 
     func initEventMonitors() {
         globalMonitor = GlobalEventMonitor(mask: [.mouseMoved]) {
             (event) -> Void in
-            let (absX, absY) = (event?.absoluteX, event?.absoluteY)
-            let (deltaX, deltaY) = (event?.deltaX, event?.deltaY)
+//            let (absX, absY) = (event?.absoluteX, event?.absoluteY)
+//            let (deltaX, deltaY) = (event?.deltaX, event?.deltaY)
+//            print("event: \(String(describing: event))")
+            if let mpv = self.mpv {
+                if mpv.mpvIsActiveApp() {
+                    print("mpv active app")
+                    if mpv.inSeekBounds(point: NSEvent.mouseLocation()) {
+                        print("****** global in seek bounds *****")
+                        NSApp.activate(ignoringOtherApps: true)
+                    }
+                }
+            }
 //            print("global \(String(describing: event?.type)) - abs pos: (\(String(describing: absX)), \(String(describing: absY))), delta: (\(String(describing: deltaX)), \(String(describing: deltaY)))\n")
         }
         localMonitor = LocalEventMonitor(mask: [.mouseMoved]) {
             (event) -> NSEvent in
-            let (absX, absY) = (event.absoluteX, event.absoluteY)
-            let (deltaX, deltaY) = (event.deltaX, event.deltaY)
-//            print("local \(event.type) - abs pos: (\(absX), \(absY)), delta: (\(deltaX), \(deltaY))\n   ")
-
+            if let mpv = self.mpv {
+                if mpv.inSeekBounds(point: NSEvent.mouseLocation()) {
+//                    print("****** local in seek bounds *****")
+                    self.handleMouse(pos: NSEvent.mouseLocation())
+                } else {
+                    NSApp.deactivate()
+                }
+            }
             return event
         }
     }
