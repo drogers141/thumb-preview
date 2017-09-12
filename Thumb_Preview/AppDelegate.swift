@@ -59,49 +59,37 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         initEventMonitors()
         handleEventMonitor(monitor: globalMonitor!, action: "start")
 
-        // get notified of all processes terminating - note this doesn't effectively work
-        NSWorkspace.shared().notificationCenter.addObserver(self, selector: #selector(handleProcessTerminated),
-                                                            name: NSNotification.Name.NSWorkspaceDidTerminateApplication,
-                                                            object: nil)
-        // but this works fine
-        NSWorkspace.shared().notificationCenter.addObserver(self, selector: #selector(activated),
-                                                            name: NSNotification.Name.NSWorkspaceDidActivateApplication,
-                                                            object: nil)
+//        // get notified of all processes terminating - note this doesn't effectively work
+//        NSWorkspace.shared().notificationCenter.addObserver(self, selector: #selector(handleProcessTerminated),
+//                                                            name: NSNotification.Name.NSWorkspaceDidTerminateApplication,
+//                                                            object: nil)
+//        // but this works fine
+//        NSWorkspace.shared().notificationCenter.addObserver(self, selector: #selector(activated),
+//                                                            name: NSNotification.Name.NSWorkspaceDidActivateApplication,
+//                                                            object: nil)
     }
 
-    // handle did activate notification
-    func activated(notification: NSNotification) {
-        if let info = notification.userInfo,
-            let app = info[NSWorkspaceApplicationKey] as? NSRunningApplication {
-            print("app activated: \(app)")
-        }
-    }
-
-    // terminate once our mpv process terminates
-    func handleProcessTerminated(notification: NSNotification) {
-        if let info = notification.userInfo,
-            let app = info[NSWorkspaceApplicationKey] as? NSRunningApplication {
-            let msg = "app terminated: \(app)"
-            print(msg)
-            if app.processIdentifier == mpv?.pid {
-                print("mpv terminated, bye ..")
-                NSApp.terminate(nil)
-            }
-        } else {
-            print("\(#function) - couldn't get notification info")
-        }
-    }
-
-    // example of nsalert
-    // let answer = dialogOKCancel(question: msg, text: "ok")
-//    func dialogOKCancel(question: String, text: String) -> Bool {
-//        let alert = NSAlert()
-//        alert.messageText = question
-//        alert.informativeText = text
-//        alert.alertStyle = NSAlertStyle.warning
-//        alert.addButton(withTitle: "OK")
-//        alert.addButton(withTitle: "Cancel")
-//        return alert.runModal() == NSAlertFirstButtonReturn
+//    // handle did activate notification
+//    func activated(notification: NSNotification) {
+//        if let info = notification.userInfo,
+//            let app = info[NSWorkspaceApplicationKey] as? NSRunningApplication {
+//            print("app activated: \(app)")
+//        }
+//    }
+//
+//    // terminate once our mpv process terminates
+//    func handleProcessTerminated(notification: NSNotification) {
+//        if let info = notification.userInfo,
+//            let app = info[NSWorkspaceApplicationKey] as? NSRunningApplication {
+//            let msg = "app terminated: \(app)"
+//            print(msg)
+//            if app.processIdentifier == mpv?.pid {
+//                print("mpv terminated, bye ..")
+//                NSApp.terminate(nil)
+//            }
+//        } else {
+//            print("\(#function) - couldn't get notification info")
+//        }
 //    }
 
     func applicationWillTerminate(_ aNotification: Notification) {
