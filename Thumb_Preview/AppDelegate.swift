@@ -40,7 +40,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.terminate(nil)
             return
         }
-//        NSApp.activate(ignoringOtherApps: true)
         print("vid name: \(vidName), thumbs dir: \(thumbsDir), duration: \(vidLength)")
         if let (tWidth, tHeight) = thumbWH {
             print("thumbSize: (\(tWidth), \(tHeight))")
@@ -48,8 +47,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         self.mpvVidName = vidName
         self.vidLength = vidLength
-//        vidLengthSecs = ThumbsManager.convertToSecs(strTime: vidLengthStr)
-//        mpvPid = pid_t(pid)
         // fail if we don't have mpv
         mpv = MPV(vidName: vidName, vidLength: vidLength)
 
@@ -59,38 +56,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         initEventMonitors()
         handleEventMonitor(monitor: globalMonitor!, action: "start")
 
-//        // get notified of all processes terminating - note this doesn't effectively work
-//        NSWorkspace.shared().notificationCenter.addObserver(self, selector: #selector(handleProcessTerminated),
-//                                                            name: NSNotification.Name.NSWorkspaceDidTerminateApplication,
-//                                                            object: nil)
-//        // but this works fine
-//        NSWorkspace.shared().notificationCenter.addObserver(self, selector: #selector(activated),
-//                                                            name: NSNotification.Name.NSWorkspaceDidActivateApplication,
-//                                                            object: nil)
     }
 
-//    // handle did activate notification
-//    func activated(notification: NSNotification) {
-//        if let info = notification.userInfo,
-//            let app = info[NSWorkspaceApplicationKey] as? NSRunningApplication {
-//            print("app activated: \(app)")
-//        }
-//    }
-//
-//    // terminate once our mpv process terminates
-//    func handleProcessTerminated(notification: NSNotification) {
-//        if let info = notification.userInfo,
-//            let app = info[NSWorkspaceApplicationKey] as? NSRunningApplication {
-//            let msg = "app terminated: \(app)"
-//            print(msg)
-//            if app.processIdentifier == mpv?.pid {
-//                print("mpv terminated, bye ..")
-//                NSApp.terminate(nil)
-//            }
-//        } else {
-//            print("\(#function) - couldn't get notification info")
-//        }
-//    }
 
     func applicationWillTerminate(_ aNotification: Notification) {
         // Insert code here to tear down your application
@@ -105,10 +72,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let mpv = mpv {
             mpv.resetWinBounds()
         }
-//        guard let vc = NSApp.mainWindow?.contentViewController as? ViewController else {
-//            print("** couldn't get viewcontroller")
-//            return
-//        }
         print("event monitor: stop global, start local")
         handleEventMonitor(monitor: localMonitor!, action: "start")
         handleEventMonitor(monitor: globalMonitor!, action: "stop")
@@ -139,7 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return thumb
     }
 
-    // let wc = win.windowController as? WindowController
+
     func handleMouse(pos: NSPoint) {
         guard let mpv = mpv else { print("no mpv .."); return }
         if mpv.inSeekBounds(point: pos) {

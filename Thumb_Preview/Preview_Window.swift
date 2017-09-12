@@ -20,8 +20,8 @@ class Preview_Window: NSWindow {
         self.backgroundColor = NSColor.clear
 
         // Change the title bar appereance
-        self.title = "Thumbs"
-        //self.titleVisibility = .hidden
+//        self.title = "Thumbs"
+        self.titleVisibility = .hidden
         self.titlebarAppearsTransparent = true
     }
 }

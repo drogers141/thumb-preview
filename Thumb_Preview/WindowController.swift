@@ -23,22 +23,16 @@ class WindowController: NSWindowController {
 
     }
 
+
     func moveWin(to: NSPoint) {
         window!.setFrameOrigin(to)
     }
 
-    // ** covered by window.setFrameOrigin(NSPoint) I believe **
-    // better actually - screen coords
-    func moveWinTo(x: CGFloat, y: CGFloat) {
-        if let winFrame = window?.frame {
-            let newFrame = NSRect(x: x, y: y, width: winFrame.width, height: winFrame.height)
-            window!.setFrame(newFrame, display: true)
-        }
-    }
 
     override var acceptsFirstResponder: Bool {
         return true
     }
+
 
     // handles escape key - cancelOperation is in an NSWindow
     // that would get it first - if not implemented gets caught by this
